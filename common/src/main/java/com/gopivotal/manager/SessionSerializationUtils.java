@@ -16,16 +16,19 @@
 
 package com.gopivotal.manager;
 
-import org.apache.catalina.Manager;
-import org.apache.catalina.Session;
-import org.apache.catalina.session.StandardSession;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import org.apache.catalina.Context;
+import org.apache.catalina.Loader;
+import org.apache.catalina.Manager;
+import org.apache.catalina.Session;
+import org.apache.catalina.session.StandardSession;
+import org.apache.catalina.util.CustomObjectInputStream;
 
 /**
  * Utilities for serializing and deserializing {@link Session}s
@@ -59,9 +62,25 @@ public final class SessionSerializationUtils {
         ByteArrayInputStream bytes = null;
         ObjectInputStream in = null;
 
+        ClassLoader oldThreadContextCL = null;
         try {
             bytes = new ByteArrayInputStream(session);
-            in = new ObjectInputStream(bytes);
+            Loader loader = null;
+            ClassLoader classLoader = null;
+            oldThreadContextCL = Thread.currentThread().getContextClassLoader();
+            Context context = manager.getContext();
+            if (context != null) {
+            	loader = context.getLoader();
+            }
+            if (loader != null) {
+            	classLoader = loader.getClassLoader();
+            }
+            if (classLoader != null) {
+            	Thread.currentThread().setContextClassLoader(classLoader);
+            	in = new CustomObjectInputStream(bytes, classLoader);
+            } else {
+            	in = new ObjectInputStream(bytes);
+            }
 
             StandardSession standardSession = (StandardSession) this.manager.createEmptySession();
             standardSession.readObjectData(in);
@@ -69,6 +88,9 @@ public final class SessionSerializationUtils {
             return standardSession;
         } finally {
             closeQuietly(in, bytes);
+            if (oldThreadContextCL != null) {
+            	Thread.currentThread().setContextClassLoader(oldThreadContextCL);
+            }
         }
     }
 

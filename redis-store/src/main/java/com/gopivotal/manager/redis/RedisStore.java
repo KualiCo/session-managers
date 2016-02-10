@@ -16,6 +16,20 @@
 
 package com.gopivotal.manager.redis;
 
+import static java.util.logging.Level.SEVERE;
+
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import org.apache.catalina.Manager;
+import org.apache.catalina.Session;
+import org.apache.catalina.Store;
+import org.apache.catalina.Valve;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+
 import com.gopivotal.manager.AbstractLifecycle;
 import com.gopivotal.manager.JmxSupport;
 import com.gopivotal.manager.LockTemplate;
@@ -24,11 +38,7 @@ import com.gopivotal.manager.SessionFlushValve;
 import com.gopivotal.manager.SessionSerializationUtils;
 import com.gopivotal.manager.StandardJmxSupport;
 import com.gopivotal.manager.StandardPropertyChangeSupport;
-import org.apache.catalina.Manager;
-import org.apache.catalina.Session;
-import org.apache.catalina.Store;
-import org.apache.catalina.Valve;
-import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -37,20 +47,10 @@ import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.net.URI;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import static java.util.logging.Level.SEVERE;
-
 /**
  * An implementation of {@link Store} that persists data to Redis
  */
 public final class RedisStore extends AbstractLifecycle implements RedisStoreManagement, Store {
-
-    private static final String INFO = "RedisStore/1.0";
 
     private static final String SESSIONS_KEY = "sessions";
 
@@ -232,11 +232,6 @@ public final class RedisStore extends AbstractLifecycle implements RedisStoreMan
             }
 
         });
-    }
-
-    @Override
-    public String getInfo() {
-        return INFO;
     }
 
     @Override
@@ -575,7 +570,7 @@ public final class RedisStore extends AbstractLifecycle implements RedisStoreMan
 
             @Override
             public Void invoke() {
-                for (Valve valve : RedisStore.this.manager.getContainer().getPipeline().getValves()) {
+                for (Valve valve : RedisStore.this.manager.getContext().getPipeline().getValves()) {
                     if (valve instanceof SessionFlushValve) {
                         RedisStore.this.logger.fine(String.format("Setting '%s' as the store for '%s'", this, valve));
                         ((SessionFlushValve) valve).setStore(RedisStore.this);
@@ -648,13 +643,13 @@ public final class RedisStore extends AbstractLifecycle implements RedisStoreMan
     }
 
     private String getContext() {
-        String name = this.manager.getContainer().getName();
+        String name = this.manager.getContext().getName();
         return name.startsWith("/") ? name : String.format("/%s", name);
     }
 
     private String getObjectName() {
         String contextPath = getContext();
-        String hostName = this.manager.getContainer().getParent().getName();
+        String hostName = this.manager.getContext().getParent().getName();
 
         return String.format("Catalina:type=Store,context=%s,host=%s,name=%s", contextPath, hostName,
                 getClass().getSimpleName());
