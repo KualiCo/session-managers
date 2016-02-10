@@ -16,6 +16,17 @@
 
 package com.gopivotal.manager;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.Host;
 import org.apache.catalina.Session;
@@ -25,17 +36,6 @@ import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 public final class SessionFlushValveTest {
 
@@ -70,11 +70,6 @@ public final class SessionFlushValveTest {
     @Test
     public void event() {
         this.valve.event(null, null, null);
-    }
-
-    @Test
-    public void getInfo() {
-        assertEquals("SessionFlushValve/1.0", this.valve.getInfo());
     }
 
     @Before

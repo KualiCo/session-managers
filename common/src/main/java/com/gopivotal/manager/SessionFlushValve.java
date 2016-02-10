@@ -34,8 +34,6 @@ import java.io.IOException;
 public final class SessionFlushValve extends AbstractLifecycle implements Contained, SessionFlushValveManagement,
         Valve {
 
-    private static final String INFO = "SessionFlushValve/1.0";
-
     private final JmxSupport jmxSupport;
 
     private final LockTemplate lockTemplate = new LockTemplate();
@@ -88,11 +86,6 @@ public final class SessionFlushValve extends AbstractLifecycle implements Contai
             }
 
         });
-    }
-
-    @Override
-    public String getInfo() {
-        return INFO;
     }
 
     @Override

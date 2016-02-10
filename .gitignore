@@ -3,3 +3,8 @@
 .idea/libraries
 dependency-reduced-pom.xml
 target
+
+.classpath
+.project
+.settings
+ 
